@@ -1,22 +1,24 @@
 using UnityEngine;
 
-public class Door : MonoBehaviour
+public class DoorController : MonoBehaviour
 {
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        // Verifica si el objeto que entra es el jugador
-        PlayerInventory playerInventory = collision.GetComponent<PlayerInventory>();
+    public Collider2D door; // Este será el collider que bloquea el paso
 
-        if (playerInventory != null && playerInventory.hasKey)
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
         {
-            OpenDoor();
-        }
-    }
+            PlayerInventory inventory = other.GetComponent<PlayerInventory>();
 
-    private void OpenDoor()
-    {
-        // Aquí puedes poner la lógica que quieras al abrir la puerta
-        Debug.Log("¡Puerta abierta!");
-        Destroy(gameObject); // Destruye la puerta (opcional)
+            if (inventory != null && inventory.hasKey)
+            {
+                Debug.Log("¡Puerta abierta!");
+                door.enabled = false; // Desactiva la colisión
+            }
+            else
+            {
+                Debug.Log("La puerta está cerrada. Necesitas una llave.");
+            }
+        }
     }
 }

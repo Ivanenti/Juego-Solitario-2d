@@ -1,18 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerAnimationHandler : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public Animator animator;
+
+    public void SetSpeed(float speed)
     {
-        
+        animator.SetFloat("Speed", speed);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void PlayAttack()
     {
-        
+        animator.SetTrigger("Attack");
+    }
+
+    public void PlayHurt()
+    {
+        animator.SetTrigger("Hurt");
+    }
+
+    public void PlayDeath()
+    {
+        animator.SetBool("IsDead", true);
+        animator.SetTrigger("Die");
     }
 }
