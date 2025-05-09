@@ -22,7 +22,7 @@ public class DoorController : MonoBehaviour
             {
                 Debug.Log("¡Puerta abierta!");
                 door.enabled = false; // Desactiva la puerta
-                MostrarMensaje("!Escapaste¡");
+                MostrarMensaje("¡¡¡LO HAS COMPLETADO!!!");
             }
             else
             {
