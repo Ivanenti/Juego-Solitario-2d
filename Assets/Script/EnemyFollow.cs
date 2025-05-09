@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class EnemyFollow : MonoBehaviour
 {
@@ -7,12 +7,13 @@ public class EnemyFollow : MonoBehaviour
     public Transform player;
     public LayerMask playerLayer;
 
-    private Vector3 originalScale;  // Variable para almacenar la escala original
+    private Vector3 originalScale;
+    private Animator animator;  // 👈 Añadido
 
     private void Start()
     {
-        // Guardar la escala original para evitar cualquier cambio no deseado
         originalScale = transform.localScale;
+        animator = GetComponent<Animator>();  // 👈 Obtenemos el Animator
     }
 
     private void Update()
@@ -26,11 +27,19 @@ public class EnemyFollow : MonoBehaviour
                 Vector2 direction = (player.position - transform.position).normalized;
                 transform.position += (Vector3)(direction * speed * Time.deltaTime);
 
-                // Volteamos el sprite seg�n la direcci�n, pero sin cambiar la escala en Y
+                // Volteo del sprite
                 if (direction.x > 0)
-                    transform.localScale = new Vector3(originalScale.x, originalScale.y, originalScale.z); // Mira a la derecha
+                    transform.localScale = new Vector3(originalScale.x, originalScale.y, originalScale.z);
                 else if (direction.x < 0)
-                    transform.localScale = new Vector3(-originalScale.x, originalScale.y, originalScale.z); // Mira a la izquierda
+                    transform.localScale = new Vector3(-originalScale.x, originalScale.y, originalScale.z);
+
+                // 👇 Aquí actualizas la animación de caminar
+                animator.SetFloat("Speed", Mathf.Abs(direction.x));
+            }
+            else
+            {
+                // 👇 Si el jugador está fuera de rango, se queda quieto
+                animator.SetFloat("Speed", 0f);
             }
         }
     }
@@ -46,5 +55,4 @@ public class EnemyFollow : MonoBehaviour
             }
         }
     }
-
 }
