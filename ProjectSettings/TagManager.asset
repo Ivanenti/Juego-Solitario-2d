@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Key
   - Enemy
+  - Plataforma
+  - MovingPlatform
   layers:
   - Default
   - TransparentFX

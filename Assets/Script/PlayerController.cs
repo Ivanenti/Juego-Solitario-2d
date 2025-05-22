@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
@@ -11,57 +11,54 @@ public class PlayerController : MonoBehaviour
     public LayerMask groundLayer;
     public Animator animator;
 
-    private bool isFacingRight = true;  // Para controlar la dirección en la que el personaje está mirando
+    private bool isFacingRight = true;
 
-    public float attackCooldown = 0.5f;  // Tiempo de espera entre ataques
-    private float lastAttackTime = 0f;  // Para controlar el cooldown del ataque
+    public float attackCooldown = 0.5f;
+    private float lastAttackTime = 0f;
 
-    public Transform attackPoint;  // El punto de ataque
-    public float attackRange = 0.5f;  // El rango del ataque
-    public LayerMask enemyLayer;  // La capa de los enemigos
+    public Transform attackPoint;
+    public float attackRange = 0.5f;
+    public LayerMask enemyLayer;
 
-    public float bounceForce = 10f;  // Fuerza de rebote
-    public float pushForce = 5f;  // Fuerza de empuje
-    public float knockbackCooldown = 0.5f;  // Cooldown para el empuje
-    private float lastKnockbackTime = -10f;  // Tiempo de la última vez que se aplicó un empuje
+    public float bounceForce = 10f;
+    public float pushForce = 5f;
+    public float knockbackCooldown = 0.5f;
+    private float lastKnockbackTime = -10f;
+
+    private Vector3 originalScale;  // Guarda la escala original
+    private Transform currentPlatform = null;  // Guarda la plataforma actual
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        originalScale = transform.localScale;  // Guarda la escala inicial
     }
 
     void Update()
     {
         float move = Input.GetAxisRaw("Horizontal");
 
-        // Movimiento
         rb.velocity = new Vector2(move * speed, rb.velocity.y);
-
-        // Animación de caminar
         animator.SetFloat("Speed", Mathf.Abs(move));
 
-        // Verifica si el personaje está en el suelo
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.1f, groundLayer);
 
-        // Salto
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
 
-        // Volteo del sprite
         if (move < 0)
         {
-            transform.localScale = new Vector3(-1, 1, 1);  // Voltea el sprite a la izquierda
-            isFacingRight = false;  // El personaje ahora está mirando a la izquierda
+            transform.localScale = new Vector3(-Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
+            isFacingRight = false;
         }
         else if (move > 0)
         {
-            transform.localScale = new Vector3(1, 1, 1);  // Voltea el sprite a la derecha
-            isFacingRight = true;  // El personaje ahora está mirando a la derecha
+            transform.localScale = new Vector3(Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
+            isFacingRight = true;
         }
 
-        // Ataque
         if (Input.GetMouseButtonDown(0) && Time.time > lastAttackTime + attackCooldown)
         {
             Attack();
@@ -73,39 +70,52 @@ public class PlayerController : MonoBehaviour
     {
         animator.SetTrigger("Attack");
 
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange);
 
-        foreach (Collider2D enemy in hitEnemies)
+        foreach (Collider2D collider in hitEnemies)
         {
-            EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
-            if (enemyHealth != null)
+            if (collider.CompareTag("Enemy")) // AsegÃºrate que el enemigo tenga el Tag "Enemy"
             {
-                enemyHealth.TakeDamage(1); // o el valor que tú definas como daño
+                EnemyHealth enemyHealth = collider.GetComponent<EnemyHealth>();
+                if (enemyHealth != null)
+                {
+                    enemyHealth.TakeDamage(1); // o la cantidad que desees
+                }
             }
         }
     }
 
-    // Método para aplicar rebote y empuje cuando colisiona con un enemigo
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // Verifica si el jugador colisiona con un enemigo
-        if (((1 << collision.gameObject.layer) & enemyLayer) != 0)
+        if (collision.gameObject.CompareTag("MovingPlatform"))
         {
-            // Solo aplica el empuje si ha pasado el cooldown
+            transform.parent = collision.transform;
+        }
+
+        // Verifica si el jugador colisiona con un enemigo (para rebote)
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
             if (Time.time >= lastKnockbackTime + knockbackCooldown)
             {
-                // Calcula la dirección del rebote (hacia arriba)
-                Vector2 bounceDirection = (collision.transform.position - transform.position).normalized;
-                rb.velocity = new Vector2(rb.velocity.x, 0); // Reseteamos la velocidad vertical antes de aplicar el rebote
-                rb.AddForce(new Vector2(0, bounceForce), ForceMode2D.Impulse); // Rebote hacia arriba
+                rb.velocity = new Vector2(rb.velocity.x, 0); // Reseteamos la velocidad vertical
+                rb.AddForce(new Vector2(0, bounceForce), ForceMode2D.Impulse); // Rebote vertical
 
-                // Calcula la dirección del empuje (hacia atrás en el eje X)
                 Vector2 pushDirection = (transform.position - collision.transform.position).normalized;
-                rb.AddForce(new Vector2(pushDirection.x, 0) * pushForce, ForceMode2D.Impulse); // Empuje solo en el eje X
+                rb.AddForce(new Vector2(pushDirection.x, 0) * pushForce, ForceMode2D.Impulse); // Empuje horizontal
 
-                // Registra el tiempo de la última aplicación de empuje
                 lastKnockbackTime = Time.time;
             }
         }
     }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("MovingPlatform"))
+        {
+            transform.parent = null;
+        }
+    }
+
 }
+
